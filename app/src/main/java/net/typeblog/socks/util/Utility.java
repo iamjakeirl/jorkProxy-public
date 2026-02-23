@@ -2,6 +2,7 @@ package net.typeblog.socks.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
@@ -18,10 +19,11 @@ import static net.typeblog.socks.util.Constants.*;
 public class Utility {
     private static final String TAG = Utility.class.getSimpleName();
 
-    public static int exec(String cmd) {
+    public static int exec(String... cmd) {
         try {
-            Process p = Runtime.getRuntime().exec(cmd);
-
+            Process p = new ProcessBuilder(cmd)
+                    .redirectErrorStream(true)
+                    .start();
             return p.waitFor();
         } catch (Exception e) {
             return -1;
@@ -57,7 +59,7 @@ public class Utility {
 
         try {
             int pid = Integer.parseInt(str.toString().trim().replace("\n", ""));
-            Runtime.getRuntime().exec("kill " + pid).waitFor();
+            exec("kill", Integer.toString(pid));
             if(!file.delete())
                 Log.w(TAG, "failed to delete pidfile");
         } catch (Exception e) {
@@ -112,6 +114,10 @@ public class Utility {
     }
 
     public static void startVpn(Context context, Profile profile) {
+        startVpn(context, profile, 0L, false);
+    }
+
+    public static void startVpn(Context context, Profile profile, long startupDelayMs, boolean waitForNetwork) {
         Intent i = new Intent(context, SocksVpnService.class)
                 .putExtra(INTENT_NAME, profile.getName())
                 .putExtra(INTENT_SERVER, profile.getServer())
@@ -120,7 +126,9 @@ public class Utility {
                 .putExtra(INTENT_DNS, profile.getDns())
                 .putExtra(INTENT_DNS_PORT, profile.getDnsPort())
                 .putExtra(INTENT_PER_APP, profile.isPerApp())
-                .putExtra(INTENT_IPV6_PROXY, profile.hasIPv6());
+                .putExtra(INTENT_IPV6_PROXY, profile.hasIPv6())
+                .putExtra(INTENT_STARTUP_DELAY_MS, startupDelayMs)
+                .putExtra(INTENT_WAIT_FOR_NETWORK, waitForNetwork);
 
         if (profile.isUserPw()) {
             i.putExtra(INTENT_USERNAME, profile.getUsername())
@@ -136,6 +144,10 @@ public class Utility {
             i.putExtra(INTENT_UDP_GW, profile.getUDPGW());
         }
 
-        context.startService(i);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(i);
+        } else {
+            context.startService(i);
+        }
     }
 }

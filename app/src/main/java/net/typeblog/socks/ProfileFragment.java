@@ -5,12 +5,14 @@ import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.provider.Settings;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.ListPreference;
 import android.text.InputType;
@@ -74,6 +76,17 @@ public class ProfileFragment extends PreferenceFragment implements Preference.On
             mPrefDns, mPrefDnsPort, mPrefAppList, mPrefUDPGW;
     private CheckBoxPreference mPrefUserpw, mPrefPerApp, mPrefAppBypass, mPrefIPv6, mPrefUDP, mPrefAuto;
 
+    // Always-on VPN shortcut
+    private Preference mPrefAlwaysOn;
+
+    // Advanced section toggle
+    private Preference mPrefAdvToggle;
+    private PreferenceCategory mCatAdvanced;
+    private boolean mAdvancedVisible = false;
+
+    // Advanced prefs to show/hide
+    private Preference[] mAdvancedPrefs;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,6 +95,8 @@ public class ProfileFragment extends PreferenceFragment implements Preference.On
         mManager = new ProfileManager(getActivity().getApplicationContext());
         initPreferences();
         reload();
+        // Collapse advanced section by default
+        setAdvancedVisible(false);
     }
 
     @Override
@@ -112,7 +127,14 @@ public class ProfileFragment extends PreferenceFragment implements Preference.On
 
     @Override
     public boolean onPreferenceClick(Preference p) {
-        // TODO: Implement this method
+        if (p == mPrefAdvToggle) {
+            mAdvancedVisible = !mAdvancedVisible;
+            setAdvancedVisible(mAdvancedVisible);
+            return true;
+        } else if (p == mPrefAlwaysOn) {
+            startActivity(new Intent(Settings.ACTION_VPN_SETTINGS));
+            return true;
+        }
         return false;
     }
 
@@ -225,6 +247,16 @@ public class ProfileFragment extends PreferenceFragment implements Preference.On
         mPrefUDPGW = (EditTextPreference) findPreference(PREF_UDP_GW);
         mPrefAuto = (CheckBoxPreference) findPreference(PREF_ADV_AUTO_CONNECT);
 
+        // Advanced toggle
+        mPrefAdvToggle = findPreference("adv_toggle");
+        mCatAdvanced = (PreferenceCategory) findPreference("cat_advanced");
+
+        // All advanced prefs (everything after the toggle)
+        mAdvancedPrefs = new Preference[]{
+                mPrefRoutes, mPrefDns, mPrefDnsPort, mPrefIPv6,
+                mPrefUDP, mPrefUDPGW, mPrefPerApp, mPrefAppBypass, mPrefAppList
+        };
+
         mPrefProfile.setOnPreferenceChangeListener(this);
         mPrefServer.setOnPreferenceChangeListener(this);
         mPrefPort.setOnPreferenceChangeListener(this);
@@ -241,6 +273,33 @@ public class ProfileFragment extends PreferenceFragment implements Preference.On
         mPrefUDP.setOnPreferenceChangeListener(this);
         mPrefUDPGW.setOnPreferenceChangeListener(this);
         mPrefAuto.setOnPreferenceChangeListener(this);
+
+        mPrefAdvToggle.setOnPreferenceClickListener(this);
+
+        mPrefAlwaysOn = findPreference("always_on_vpn");
+        mPrefAlwaysOn.setOnPreferenceClickListener(this);
+    }
+
+    private void setAdvancedVisible(boolean visible) {
+        mAdvancedVisible = visible;
+
+        if (visible) {
+            // Add prefs back to category
+            for (Preference p : mAdvancedPrefs) {
+                if (mCatAdvanced.findPreference(p.getKey()) == null) {
+                    mCatAdvanced.addPreference(p);
+                }
+            }
+            mPrefAdvToggle.setTitle(R.string.adv_toggle_hide);
+            mPrefAdvToggle.setSummary(null);
+        } else {
+            // Remove all advanced prefs from category (keep only the toggle)
+            for (Preference p : mAdvancedPrefs) {
+                mCatAdvanced.removePreference(p);
+            }
+            mPrefAdvToggle.setTitle(R.string.adv_toggle);
+            mPrefAdvToggle.setSummary(R.string.adv_toggle_sum);
+        }
     }
 
     private void reload() {

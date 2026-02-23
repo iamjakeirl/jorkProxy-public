@@ -3,11 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:paddingEnd="16dp"
+    android:paddingStart="8dp">
 
     <Switch
         android:id="@+id/switch_action_button"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:thumbTint="#10B685"
+        android:trackTint="#40454a" />
 
 </LinearLayout>

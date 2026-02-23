@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- jorkSpoofer design system -->
+    <color name="bg_deep">#151719</color>
+    <color name="bg_surface">#1a1c1f</color>
+    <color name="bg_chrome">#0a0b0c</color>
+    <color name="bg_chrome_dark">#070809</color>
+
+    <color name="accent">#10B685</color>
+    <color name="accent_dim">#0d8f68</color>
+    <color name="error">#e05545</color>
+
+    <color name="text_primary">#c0c4c9</color>
+    <color name="text_secondary">#70757a</color>
+    <color name="text_muted">#505560</color>
+    <color name="text_hint">#40454a</color>
+
+    <color name="divider">#0f1012</color>
+    <color name="border">#1a1d21</color>
+</resources>

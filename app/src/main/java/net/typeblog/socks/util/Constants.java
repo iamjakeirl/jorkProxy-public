@@ -4,6 +4,7 @@ public class Constants
 {
     public static final String ROUTE_ALL = "all",
             ROUTE_CHN = "chn";
+    public static final long DEFAULT_STARTUP_WARMUP_DELAY_MS = 10_000L;
 
     private static final String INTENT_PREFIX = "SOCKS";
     public static final String INTENT_NAME = INTENT_PREFIX + "NAME",
@@ -18,7 +19,9 @@ public class Constants
             INTENT_APP_BYPASS = INTENT_PREFIX + "APPBYPASS",
             INTENT_APP_LIST = INTENT_PREFIX + "APPLIST",
             INTENT_IPV6_PROXY = INTENT_PREFIX + "IPV6",
-            INTENT_UDP_GW = INTENT_PREFIX + "UDPGW";
+            INTENT_UDP_GW = INTENT_PREFIX + "UDPGW",
+            INTENT_STARTUP_DELAY_MS = INTENT_PREFIX + "START_DELAY_MS",
+            INTENT_WAIT_FOR_NETWORK = INTENT_PREFIX + "WAIT_FOR_NETWORK";
 
     public static final String PREF = "profile",
             PREF_PROFILE = "profile",

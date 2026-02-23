@@ -1,8 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.Material">
-        <item name="android:colorPrimary">#5C6BC0</item>
-        <item name="android:colorPrimaryDark">#3949AB</item>
-        <item name="android:colorAccent">#FFC107</item>
+        <!-- Dark chrome matching jorkSpoofer GUI manager -->
+        <item name="android:colorPrimary">@color/bg_chrome</item>
+        <item name="android:colorPrimaryDark">@color/bg_chrome_dark</item>
+        <item name="android:colorAccent">@color/accent</item>
+
+        <!-- Window -->
+        <item name="android:windowBackground">@color/bg_deep</item>
+        <item name="android:colorBackground">@color/bg_deep</item>
+
+        <!-- ActionBar -->
+        <item name="android:actionBarStyle">@style/JorkActionBar</item>
+        <item name="android:actionOverflowButtonStyle">@style/JorkOverflow</item>
+
+        <!-- Text -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorTertiary">@color/text_muted</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+
+        <!-- Dialog -->
+        <item name="android:alertDialogTheme">@style/JorkDialog</item>
+
+        <!-- List divider -->
+        <item name="android:listDivider">@drawable/divider</item>
+
+        <!-- Controls -->
+        <item name="android:colorControlActivated">@color/accent</item>
+        <item name="android:colorControlNormal">@color/text_hint</item>
+        <item name="android:colorControlHighlight">#1a10B685</item>
+        <item name="android:colorButtonNormal">@color/text_hint</item>
+
+        <!-- System bars -->
+        <item name="android:navigationBarColor">@color/bg_chrome_dark</item>
+        <item name="android:statusBarColor">@color/bg_chrome_dark</item>
+    </style>
+
+    <style name="JorkActionBar" parent="@android:style/Widget.Material.ActionBar.Solid">
+        <item name="android:background">@color/bg_chrome</item>
+        <item name="android:titleTextStyle">@style/JorkActionBarTitle</item>
+        <item name="android:elevation">0dp</item>
+    </style>
+
+    <style name="JorkActionBarTitle" parent="@android:style/TextAppearance.Material.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="JorkOverflow" parent="@android:style/Widget.Material.ActionButton.Overflow">
+        <item name="android:tint">@color/text_secondary</item>
+    </style>
+
+    <style name="JorkDialog" parent="@android:style/Theme.Material.Dialog.Alert">
+        <item name="android:colorPrimary">@color/bg_chrome</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/bg_surface</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>
 </resources>

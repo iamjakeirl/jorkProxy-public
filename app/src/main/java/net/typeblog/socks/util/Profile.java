@@ -68,7 +68,7 @@ public class Profile {
     }
 
     public String getDns() {
-        return mPref.getString(key("dns"), "8.8.8.8");
+        return mPref.getString(key("dns"), "1.1.1.1");
     }
 
     public void setDns(String dns) {
