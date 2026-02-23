@@ -1,14 +1,38 @@
+# Built outputs
+/build/
+/app/build/
+/captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Gradle
+.gradle/
+gradle.properties
+local.properties
+
+# IDE - Android Studio / IntelliJ
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# Native build
+.externalNativeBuild/
+.cxx/
+
+# OS junk
 .DS_Store
-/build
-/captures
-.externalNativeBuild
+Thumbs.db
 *~
+
+# Signing
+*.jks
+*.keystore
+
+# Logs
+*.log
