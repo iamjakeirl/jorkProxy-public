@@ -6,6 +6,7 @@ import android.os.Build;
 import android.util.Log;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,6 +19,12 @@ import static net.typeblog.socks.util.Constants.*;
 
 public class Utility {
     private static final String TAG = Utility.class.getSimpleName();
+
+    public static int parsePort(String value) {
+        if (value == null || !value.matches("[0-9]{1,5}")) return -1;
+        int port = Integer.parseInt(value);
+        return port >= 1 && port <= 65535 ? port : -1;
+    }
 
     public static int exec(String... cmd) {
         try {
@@ -79,37 +86,18 @@ public class Utility {
         return ret.substring(0, ret.length() - separator.length());
     }
 
-    public static void makePdnsdConf(Context context, String dns, int port) {
+    public static void makePdnsdConf(Context context, String dns, int port) throws IOException {
         String conf = context.getString(R.string.pdnsd_conf)
                 .replace("{DIR}", context.getFilesDir().toString())
                 .replace("{IP}", dns)
                 .replace("{PORT}", Integer.toString(port));
 
-        File f = new File(context.getFilesDir() + "/pdnsd.conf");
-
-        if (f.exists()) {
-            if(!f.delete())
-                Log.w(TAG, "failed to delete pdnsd.conf");
+        try (OutputStream out = new FileOutputStream(new File(context.getFilesDir(), "pdnsd.conf"))) {
+            out.write(conf.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
-
-        try {
-            OutputStream out = new FileOutputStream(f);
-            out.write(conf.getBytes());
-            out.flush();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        File cache = new File(context.getFilesDir() + "/pdnsd.cache");
-
-        if (!cache.exists()) {
-            try {
-                if(!cache.createNewFile())
-                    Log.w(TAG, "failed to create pdnsd.cache");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        File cache = new File(context.getFilesDir(), "pdnsd.cache");
+        if (!cache.exists() && !cache.createNewFile()) {
+            throw new IOException("Failed to create DNS cache");
         }
     }
 

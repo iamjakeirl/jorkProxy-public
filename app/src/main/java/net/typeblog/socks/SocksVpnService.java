@@ -21,9 +21,11 @@ import android.util.Log;
 import net.typeblog.socks.util.Profile;
 import net.typeblog.socks.util.ProfileManager;
 import net.typeblog.socks.util.Routes;
+import net.typeblog.socks.util.SocksDnsRelay;
 import net.typeblog.socks.util.Utility;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -64,6 +66,7 @@ public class SocksVpnService extends VpnService {
     private long mStartTime = 0;
 
     private ParcelFileDescriptor mInterface;
+    private volatile SocksDnsRelay mDnsRelay;
     private volatile boolean mRunning = false;
     private volatile boolean mTunnelConnected = false;
     private volatile boolean mWatchdogStarted = false;
@@ -95,14 +98,20 @@ public class SocksVpnService extends VpnService {
         public void run() {
             if (!mRunning) return;
 
-            boolean alive = isTun2socksAlive();
+            if (mTunnelTaskRunning.get()) {
+                mHandler.postDelayed(this, WATCHDOG_INTERVAL_MS);
+                return;
+            }
+            SocksDnsRelay relay = mDnsRelay;
+            boolean alive = isDaemonAlive("tun2socks") && isDaemonAlive("pdnsd")
+                    && relay != null && relay.isRunning();
             if (alive) {
                 mTunnelConnected = true;
                 mConsecutiveFailures = 0;
                 writeStatus("connected");
             } else {
                 if (mTunnelConnected) {
-                    Log.w(TAG, "tun2socks died, scheduling restart");
+                    Log.w(TAG, "tunnel or DNS helper died, scheduling restart");
                 }
                 mTunnelConnected = false;
                 writeStatus("reconnecting");
@@ -292,12 +301,12 @@ public class SocksVpnService extends VpnService {
 
         stopForeground(true);
 
+        stopDnsRelay();
         Utility.killPidFile(getFilesDir() + "/tun2socks.pid");
         Utility.killPidFile(getFilesDir() + "/pdnsd.pid");
 
         if (mInterface != null) {
             try {
-                System.jniclose(mInterface.getFd());
                 mInterface.close();
             } catch (Exception e) {
                 Log.w(TAG, "failed to close vpn interface", e);
@@ -468,6 +477,11 @@ public class SocksVpnService extends VpnService {
                         onTunnelAttemptFailed(reason + ": tunnel failed to initialize");
                     }
                 } finally {
+                    if (!mRunning) {
+                        stopDnsRelay();
+                        Utility.killPidFile(getFilesDir() + "/tun2socks.pid");
+                        Utility.killPidFile(getFilesDir() + "/pdnsd.pid");
+                    }
                     mTunnelTaskRunning.set(false);
                     ensureWatchdogRunning();
                 }
@@ -487,7 +501,6 @@ public class SocksVpnService extends VpnService {
         long delay = computeRestartBackoffMs();
         Log.w(TAG, "tunnel start/restart failed (" + reason + "), retry in " + delay + "ms");
         writeStatus("reconnecting");
-        scheduleTunnelStart(delay, true, "retry");
     }
 
     private long computeRestartBackoffMs() {
@@ -540,8 +553,29 @@ public class SocksVpnService extends VpnService {
                 && !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN);
     }
 
+    private synchronized boolean startDnsRelay() {
+        stopDnsRelay();
+        if (!mRunning) return false;
+        try {
+            mDnsRelay = new SocksDnsRelay(mServer, mPort, mUsername, mPassword, mDns, mDnsPort);
+            Utility.makePdnsdConf(this, "127.0.0.1", mDnsRelay.getPort());
+            return true;
+        } catch (IOException e) {
+            Log.e(TAG, "failed to initialize DNS relay", e);
+            stopDnsRelay();
+            return false;
+        }
+    }
+
+    private synchronized void stopDnsRelay() {
+        if (mDnsRelay != null) {
+            mDnsRelay.close();
+            mDnsRelay = null;
+        }
+    }
+
     private boolean startTunnel(int fd) {
-        Utility.makePdnsdConf(this, mDns, mDnsPort);
+        if (!startDnsRelay()) return false;
 
         String nativeDir = getApplicationInfo().nativeLibraryDir;
         String filesDir = getFilesDir().toString();
@@ -621,8 +655,8 @@ public class SocksVpnService extends VpnService {
         return false;
     }
 
-    private boolean isTun2socksAlive() {
-        File pidFile = new File(getFilesDir() + "/tun2socks.pid");
+    private boolean isDaemonAlive(String name) {
+        File pidFile = new File(getFilesDir() + "/" + name + ".pid");
         if (!pidFile.exists()) return false;
 
         try {
@@ -633,7 +667,16 @@ public class SocksVpnService extends VpnService {
             if (len <= 0) return false;
 
             int pid = Integer.parseInt(new String(buf, 0, len).trim());
-            return new File("/proc/" + pid + "/cmdline").exists();
+            if (pid <= 0) return false;
+            try (java.io.FileInputStream cmdline = new java.io.FileInputStream("/proc/" + pid + "/cmdline")) {
+                byte[] command = new byte[4096];
+                int count = cmdline.read(command);
+                if (count <= 0) return false;
+                int end = 0;
+                while (end < count && command[end] != 0) end++;
+                return new String(command, 0, end, java.nio.charset.StandardCharsets.UTF_8)
+                        .equals(getApplicationInfo().nativeLibraryDir + "/lib" + name + ".so");
+            }
         } catch (Exception e) {
             return false;
         }
@@ -729,7 +772,7 @@ public class SocksVpnService extends VpnService {
                 java.io.FileOutputStream fos = new java.io.FileOutputStream(STATUS_FILE);
                 fos.write(status.getBytes());
                 fos.close();
-                new File(STATUS_FILE).setReadable(true, false);
+                android.system.Os.chmod(STATUS_FILE, 0600);
             } catch (Exception e) {
                 Log.w(TAG, "failed to write status file", e);
             }

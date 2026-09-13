@@ -1,13 +1,25 @@
-## Privacy policy for SocksDroid
+# Privacy policy for jorkProxy
 
-SocksDroid is a generic VPN application that connects to a SOCKS5 server specified by the user.
-It doesn't connect to any other service, in particular it doesn't collect any data for the SocksDroid developers.
+jorkProxy forwards the traffic covered by its routing and per-app settings to
+a SOCKS5 server you configure. It contains no developer analytics or telemetry.
+The proxy operator can observe destination addresses and read unencrypted
+traffic. SOCKS5 itself does not encrypt traffic or username/password
+authentication between your device and the proxy. HTTPS connections retain
+their own encryption.
 
-As a VPN application SocksDroid forwards all or some of the device's network traffic to the server specified,
-so it is important that the user trusts this server. In particular if the server is maintained by a third-party
-VPN provider, this provider will be able to read or modify data transmitted from any application using non-encrypted
-protocols or block access to applications using encrypted protocols.
-This is not specific to SocksDroid, any VPN application has the same concerns.
+DNS requests handled by jorkProxy are sent over TCP through your SOCKS5 server
+to your configured DNS resolver. There is no direct resolver fallback when
+the proxy fails. The resolver can see the queried names, and the proxy can
+observe unencrypted DNS. If you enter a hostname for the SOCKS server, Android
+may resolve that hostname before connecting; a numeric IP avoids this lookup.
+Apps and destinations excluded from proxy routing are outside this coverage.
 
-SocksDroid is [open source](https://github.com/bndeff/socksdroid), which makes it easier to review its security
-by independent researchers.
+Profiles, proxy credentials, the DNS cache, and connection status are stored in
+the app's private Android storage. Credentials are not separately encrypted
+at rest. App backup is disabled, and preferences and private files are excluded
+from Android cloud backup and device-transfer rules. This does not remove
+backups made by older versions. Uninstalling the app removes its private data.
+Debug builds may log the proxy address and connection diagnostics.
+
+Only use proxy servers and DNS resolvers you trust. Android's Block connections
+without VPN setting can prevent traffic from escaping while the VPN is down.

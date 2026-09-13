@@ -151,10 +151,13 @@ public class ProfileFragment extends PreferenceFragment implements Preference.On
             resetTextN(mPrefServer, newValue);
             return true;
         } else if (p == mPrefPort) {
-            if (TextUtils.isEmpty(newValue.toString()))
+            int port = Utility.parsePort(newValue.toString());
+            if (port == -1) {
+                Toast.makeText(getActivity(), R.string.err_port, Toast.LENGTH_SHORT).show();
                 return false;
+            }
 
-            mProfile.setPort(Integer.parseInt(newValue.toString()));
+            mProfile.setPort(port);
             resetTextN(mPrefPort, newValue);
             return true;
         } else if (p == mPrefUserpw) {
@@ -177,10 +180,13 @@ public class ProfileFragment extends PreferenceFragment implements Preference.On
             resetTextN(mPrefDns, newValue);
             return true;
         } else if (p == mPrefDnsPort) {
-            if (TextUtils.isEmpty(newValue.toString()))
+            int port = Utility.parsePort(newValue.toString());
+            if (port == -1) {
+                Toast.makeText(getActivity(), R.string.err_port, Toast.LENGTH_SHORT).show();
                 return false;
+            }
 
-            mProfile.setDnsPort(Integer.parseInt(newValue.toString()));
+            mProfile.setDnsPort(port);
             resetTextN(mPrefDnsPort, newValue);
             return true;
         } else if (p == mPrefPerApp) {

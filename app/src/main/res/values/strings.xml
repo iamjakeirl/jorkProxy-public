@@ -46,6 +46,7 @@
     <string name="prof_del_confirm">Delete profile %s?</string>
     <string name="switch_main">Toggle proxy</string>
 
+    <string name="err_port">Enter a port from 1 to 65535</string>
     <string name="err_add_prof">Failed to add profile %s</string>
     <string name="err_del_prof">Error deleting profile %s</string>
     <string name="notify_title">jorkProxy active</string>
